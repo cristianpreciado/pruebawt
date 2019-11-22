@@ -3,36 +3,85 @@
     <head>
         <meta charset="utf-8">
         <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://unpkg.com/vue-select@latest/dist/vue-select.css">
         <title></title>
     </head>
     <body>
         <div id="app">
-            <h1>Listado</h1>
-            <div v-for="info in lista.data" class="container">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                <label class="btn btn-secondary active">
+                    <input type="radio" v-on:click="init()" autocomplete="off" checked> Listado
+                </label>
+                <label class="btn btn-secondary">
+                    <input type="radio" name="options" v-on:click="completadas()" id="option2" autocomplete="off"> Completadas
+                </label>
+            </div>
+            <h1>Listado {{tipoListado}}</h1>
+            <v-select :options="options"></v-select>
+            <input type="text" class="form-control" v-model="search">
+            <div v-for="info in filteredItems" class="container">
                 <div class="row" style="margin:10px;">
                     <div class="col-sm-10">
                         {{ info.title }}
                     </div>
                     <div class="col-sm-2">
-                        <button type="button" class="btn btn-danger">Eliminar</button>
+                        <button type="button" v-on:click="eliminar(info.id)" class="btn btn-danger">Eliminar</button>
                     </div>
                 </div>
             </div>
         </div>
         <script src="vue.min.js"></script>
         <script src="axios.min.js"></script>
+        <script src="https://unpkg.com/vue-select@latest"></script>
         <script type="text/javascript">
+            const urlData="https://jsonplaceholder.typicode.com";
+            Vue.component('v-select', VueSelect.VueSelect)
             const app = new Vue({
                 el: '#app',
                 data () {
                     return {
-                      lista: []
+                        search: '',
+                        tipoListado:"completo",
+                        lista: [],
+                        options: []
+                    }
+                },
+                methods:{
+                    init(){
+                        axios
+                        .get(urlData+'/todos')
+                        .then(response => {
+                            this.lista = response.data;
+                            this.tipoListado="completo";
+                            this.options = this.lista.filter(item => {
+                                return item.userId
+                            })
+                        });
+                    },
+                    completadas(){
+                        axios
+                        .get(urlData+'/posts?completed=true')
+                        .then(response => {this.lista = response.data; this.tipoListado="filtrado tareas completadas";});
+                    },
+                    eliminar: function (id) {
+                        axios
+                        .delete(urlData+'/posts/'+id)
+                        .then(response => ( console.log("error: ",response) ));
                     }
                 },
                 mounted () {
-                    axios
-                    .get('https://jsonplaceholder.typicode.com/todos')
-                    .then(response => (this.lista = response))
+                    this.init();
+                },
+                computed: {
+                    filteredItems() {
+                        if(this.search!=''){
+                            return this.lista.filter(item => {
+                                return item.title.toLowerCase().indexOf(this.search.toLowerCase()) > -1
+                            })
+                        }else{
+                            return this.lista;
+                        }
+                    }
                 }
             });
 
