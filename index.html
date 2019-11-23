@@ -150,6 +150,7 @@
                         search: '',
                         tipoListado:"completo",
                         lista: [],
+                        listaFiltrado: [],
                         options: []
                     }
                 },
@@ -159,6 +160,7 @@
                         .get(urlData+'/todos')
                         .then(response => {
                             this.lista = response.data;
+                            this.listaFiltrado = this.lista;
                             this.tipoListado="completo";
                             this.options = this.lista.map(item => {
                                 return item.userId;
@@ -171,12 +173,11 @@
                         .then(response => {this.lista = response.data; this.tipoListado="filtrado tareas completadas";});
                     },
                     filtroUsuario: function (a) {
+                        this.listaFiltrado = this.lista;
                         if(a!=null){
-                            this.lista = this.lista.filter(item => {
+                            this.listaFiltrado = this.listaFiltrado.filter(item => {
                                 return item.userId == a
                             })
-                        }else{
-                            this.init();
                         }
                     },
                     eliminar: function (id) {
@@ -189,6 +190,7 @@
                             this.showModal=false;
                             return item.id!=this.idEliminacionTemp;
                         });
+                        this.listaFiltrado = this.lista;
                     }
                 },
                 mounted () {
@@ -197,11 +199,11 @@
                 computed: {
                     filteredItems() {
                         if(this.search!=''){
-                            return this.lista.filter(item => {
+                            return this.listaFiltrado.filter(item => {
                                 return item.title.toLowerCase().indexOf(this.search.toLowerCase()) > -1
                             })
                         }else{
-                            return this.lista;
+                            return this.listaFiltrado;
                         }
                     }
                 }
